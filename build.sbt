@@ -35,6 +35,8 @@ lazy val es2parquet = (project in file(".")).
   settings(
     mainClass in assembly := Some("com.redhat.et.es2parquet.Main"),
     assemblyMergeStrategy in assembly := { 
+      case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
+      case PathList(ps @ _*) if ps.last endsWith "UnusedStubClass.class" => MergeStrategy.first
       case "META-INF/MANIFEST.MF" => MergeStrategy.concat
       case x => {
 	val oldStrategy = (assemblyMergeStrategy in assembly).value
