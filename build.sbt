@@ -11,6 +11,7 @@ val SCALA_VERSION = "2.11.8"
 
 def commonSettings = Seq(
   libraryDependencies ++= Seq(
+    "com.github.scopt" %% "scopt" % "3.5.0",
     "org.apache.spark" %% "spark-core" % SPARK_VERSION,
     "org.apache.spark" %% "spark-sql" % SPARK_VERSION,
     "org.scala-lang" % "scala-reflect" % SCALA_VERSION,
@@ -35,12 +36,11 @@ lazy val es2parquet = (project in file(".")).
   settings(
     mainClass in assembly := Some("com.redhat.et.es2parquet.Main"),
     assemblyMergeStrategy in assembly := { 
-      case PathList(ps @ _*) if ps.last endsWith ".html" => MergeStrategy.first
-      case PathList(ps @ _*) if ps.last endsWith "UnusedStubClass.class" => MergeStrategy.first
-      case "META-INF/MANIFEST.MF" => MergeStrategy.concat
-      case x => {
-	val oldStrategy = (assemblyMergeStrategy in assembly).value
-	oldStrategy(x)
-      }
+      case m if m.toLowerCase.endsWith("manifest.mf")          => MergeStrategy.discard
+      case m if m.toLowerCase.matches("meta-inf.*\\.sf$")      => MergeStrategy.discard
+      case "log4j.properties"                                  => MergeStrategy.discard
+      case m if m.toLowerCase.startsWith("meta-inf/services/") => MergeStrategy.filterDistinctLines
+      case "reference.conf"                                    => MergeStrategy.concat
+      case _                                                   => MergeStrategy.first
     }
   )
