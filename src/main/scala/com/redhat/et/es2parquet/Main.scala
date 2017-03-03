@@ -41,8 +41,6 @@ object Main {
     
     parser.parse(args, ES2PConfig()) match {
       case Some(config) =>
-	Console.println(s"ok! $config")
-	
 	val sesh = SparkSession.builder().master("local[*]").getOrCreate()
 	val endpoint = config.endpoint
 	val indices = config.indices
