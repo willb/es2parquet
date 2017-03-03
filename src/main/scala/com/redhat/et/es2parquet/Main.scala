@@ -3,7 +3,7 @@ package com.redhat.et.es2parquet
 import org.apache.spark.sql.SparkSession
 import scopt.OptionParser
 
-case class ES2PConfig(endpoint: String="", indices: String="", output: String = "out.parquet", saveMode: String = "overwrite", arrayFields: Seq[String] = Seq("tags")) 
+case class ES2PConfig(endpoint: String="", indices: String="", output: String = "out.parquet", saveMode: String = "overwrite", arrayFields: Seq[String] = Seq("tags"), scrollsize: String = "10000")
 
 object Main {
   def main(args: Array[String]) {
@@ -29,6 +29,14 @@ object Main {
       opt[String]("savemode")
 	.action((x,c) => c.copy(saveMode=x))
 	.text("what to do if the output file already exists (default is \"overwrite\")")
+      
+      opt[String]("scrollsize")
+	.action((x,c) => {
+	  val ss = scala.util.Try(x.toInt.toString).recover({case _ => Console.println("expected an integer for --scrollsize"); System.exit(1); "0"})
+	  c.copy(scrollsize=ss.get)
+	})
+	.text("Elasticsearch scroll size (default is 10000)")
+
     }
     
     parser.parse(args, ES2PConfig()) match {
@@ -40,9 +48,10 @@ object Main {
 	val indices = config.indices
 	val output = config.output
 	val savemode = config.saveMode
+	val scrollsize = config.scrollsize
 
 	val sqlc = sesh.sqlContext
-	val df = sqlc.esDF(indices, Map("es.nodes" -> endpoint, "es.nodes.wan.only" -> "true", "es.read.field.as.array.include" -> "tags"))
+	val df = sqlc.esDF(indices, Map("es.nodes" -> endpoint, "es.nodes.wan.only" -> "true", "es.read.field.as.array.include" -> "tags", "es.scroll.size" -> scrollsize))
 	df.write.mode(savemode).save(output)
 
 	sesh.sparkContext.stop
