@@ -37,6 +37,7 @@ object Main {
 	})
 	.text("Elasticsearch scroll size (default is 10000)")
 
+      help("help").text("prints this usage text")
     }
     
     parser.parse(args, ES2PConfig()) match {
